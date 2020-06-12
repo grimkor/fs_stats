@@ -63,14 +63,23 @@ class StateMachine():
 			self.on_shutdown()
 		
 		if 'END PrepareTeamBattleScreen' in line:
-			if (match := re.search(r'winnerChars P1 (\[.*?\]) P2 (\[.*?\])', line)):		
+			if (match := re.search(r'winnerChars P1 \[(.*?)\] P2 \[(.*?)\]', line)):
+				print(match.group(1))
+				print(match.group(2))
+			
 				if len(match.group(1).split(',')) == 3:
 					# player 1 wins
-					self.loser_score = len(match.group(2).split(','))
+					if match.group(2):
+						self.loser_score = len(match.group(2).split(','))
+					else:
+						self.loser_score = 0
 					self.win = self.player_number == 1
 				elif len(match.group(2).split(',')) == 3:
 					# player 2 wins
-					self.loser_score = len(match.group(1).split(','))
+					if match.group(1):
+						self.loser_score = len(match.group(1).split(','))
+					else:
+						self.loser_score = 0
 					self.win = self.player_number == 2
 				else:
 					return
@@ -88,12 +97,11 @@ class StateMachine():
 				
 				self.gameplay_random_seed = self.opp_name = self.opp_rank = self.my_rank = self.player_number = self.win = self.loser_score = None
 				self.state = State.NO_MATCH
+				database.publish()
 	
 	def on_shutdown(self):
 		self.gameplay_random_seed = self.opp_name = self.opp_rank = self.my_rank = self.player_number = self.win = self.loser_score = None
 		self.state = State.GAME_CLOSED
-
-		database.publish()
 
 def main(state_machine):
 	with open(OUTPUT_LOG) as f:

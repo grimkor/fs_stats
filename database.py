@@ -7,6 +7,8 @@ from tabulate import tabulate
 
 import paramiko
 
+publish_to_server = False
+
 def add(id, win, opp_name, opp_league, opp_rank, my_league, my_rank, loser_score):
 	with contextlib.closing(sqlite3.connect('games.db')) as conn:
 		c = conn.cursor()
@@ -140,8 +142,12 @@ def publish():
 		print(f.read())
 		f.seek(0)
 		
-		with paramiko.SSHClient() as ssh:
-			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-			ssh.connect('glaceon.social', username='mastodon', key_filename='id_rsa')
-			with ssh.open_sftp() as sftp:
-				sftp.putfo(f, 'hollymcfarland.com/fs-stats.txt')
+		if publish_to_server:
+			with paramiko.SSHClient() as ssh:
+				ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+				ssh.connect('glaceon.social', username='mastodon', key_filename='id_rsa')
+				with ssh.open_sftp() as sftp:
+					sftp.putfo(f, 'hollymcfarland.com/fs-stats.txt')
+		else:
+			with open('output.txt', 'w') as f2:
+				print(f.read(), file=f2)

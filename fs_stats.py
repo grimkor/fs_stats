@@ -57,6 +57,8 @@ class StateMachine():
 				self.my_rank = int(my_dict['playerLeague']), int(my_dict['playerRank'])
 				
 				self.state = State.MATCH
+				
+				print(f'Match found! Opponent is {self.opp_name}')
 	
 	def match(self, line):
 		if 'Steam shutdown' in line:
@@ -64,9 +66,6 @@ class StateMachine():
 		
 		if 'END PrepareTeamBattleScreen' in line:
 			if (match := re.search(r'winnerChars P1 \[(.*?)\] P2 \[(.*?)\]', line)):
-				print(match.group(1))
-				print(match.group(2))
-			
 				if len(match.group(1).split(',')) == 3:
 					# player 1 wins
 					if match.group(2):
@@ -83,6 +82,10 @@ class StateMachine():
 					self.win = self.player_number == 2
 				else:
 					return
+				
+				print('Match complete!')
+				print(f'My score: {3 if self.win else self.loser_score}')
+				print(f'{self.opp_name} score: {3 if not self.win else self.loser_score}')
 				
 				database.add(
 					self.gameplay_random_seed,

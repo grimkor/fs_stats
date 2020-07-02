@@ -5,9 +5,10 @@ import math
 
 from tabulate import tabulate
 
-import paramiko
+PUBLISH_TO_SERVER = False
 
-publish_to_server = False
+if PUBLISH_TO_SERVER:
+	import paramiko
 
 def add(id, win, opp_name, opp_league, opp_rank, my_league, my_rank, loser_score):
 	with contextlib.closing(sqlite3.connect('games.db')) as conn:
@@ -40,10 +41,6 @@ def add(id, win, opp_name, opp_league, opp_rank, my_league, my_rank, loser_score
 			)
 			
 			conn.commit()
-		
-		
-		c.execute('SELECT * FROM games WHERE id=?;', (id,))
-		print(c.fetchone())
 
 def oldest_game():
 	with contextlib.closing(sqlite3.connect('games.db')) as conn:
@@ -129,20 +126,18 @@ def publish():
 		table_width = len(table.split('\n')[1]) # the hyphens separating headers from data
 		                                        # guaranteed to be the longest line		
 		
-		print('HOLLY FANTASY STRIKE RANKED RESULTS'.center(table_width), file=f)
-		print('-----------------------------------'.center(table_width), file=f)
-		print('Updated automatically when Fantasy Strike is closed'.center(table_width), file=f)
+		print('FANTASY STRIKE RANKED RESULTS'.center(table_width), file=f)
+		print('-----------------------------'.center(table_width), file=f)
+		print('Updated automatically after each match'.center(table_width), file=f)
 		print(file=f)
-		print(f'Holly\'s win:loss ratio since {oldest_game()} is {get_win_loss()}', file=f)
+		print(f'Win:loss ratio since {oldest_game()} is {get_win_loss()}', file=f)
 		print(file=f)
 		print(create_table(fetch_rows()), file=f)
 		print(file=f)
 		print('Generated with https://github.com/undergroundmonorail/fs_stats', file=f)
 		f.seek(0)
-		print(f.read())
-		f.seek(0)
 		
-		if publish_to_server:
+		if PUBLISH_TO_SERVER:
 			with paramiko.SSHClient() as ssh:
 				ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 				ssh.connect('glaceon.social', username='mastodon', key_filename='id_rsa')

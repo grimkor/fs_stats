@@ -16,6 +16,8 @@ this is currently hardcoded to work on windows but that can be fixed by editing 
 
 **setup:**
 
-put an openssh private key file in the same folder as where you cloned this to that can be used to connect to your server. then go to line 143 in `database.py` and change the hostname and username to the ones relevant for your server. (mine are weird because my personal site is hosted on the same server as my mastodon instance. don't worry about it.) while you're there, you can customize the output by modifying the lines just above that in the `publish()` function
+if you just want to print to a file, i have a tutorial video (i know, i know) for how to set it up https://www.youtube.com/watch?v=_F1m2so6t14
 
-then just make sure that `fs_stats.py` is running when you open the game
+if you want to automatically publish to a server (like i do), set PUBLISH_TO_SERVER to true. put an openssh private key file in the same folder as where you cloned this to that can be used to connect to your server. then go to the bottom of `database.py` and change the hostname and username to the ones relevant for your server. (mine are weird because my personal site is hosted on the same server as my mastodon instance. don't worry about it.)
+
+this was originally meant just for me, so apologies for the user unfriendliness. maybe one day i'll get around to making it properly configurable

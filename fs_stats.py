@@ -6,6 +6,7 @@ from enum import Enum, auto
 import watchgod
 
 import database
+from formatters import get_rank, format_score
 
 OUTPUT_LOG = os.environ['USERPROFILE'] + r'\AppData\LocalLow\Sirlin Games\Fantasy Strike\output_log.txt'
 
@@ -70,7 +71,7 @@ class StateMachine(threading.Thread):
 
                 self.state = State.MATCH
                 self.gui.update_status('In Match')
-                self.gui.update_opponent_name(self.opp_name)
+                self.gui.set_values({"opp_name": self.opp_name})
                 print(f'Match found! Opponent is {self.opp_name}')
 
     def match(self, line):
@@ -110,16 +111,26 @@ class StateMachine(threading.Thread):
                     self.my_rank[1],
                     self.loser_score
                 )
+                self.gui.set_values({
+                    "opp_name": self.opp_name,
+                    # "opp_league": self.opp_rank[0],
+                    "opp_rank": get_rank(self.opp_rank[0], self.opp_rank[1]),
+                    # "my_league": self.my_rank[0],
+                    "my_rank": get_rank(self.my_rank[0], self.my_rank[1]),
+                    "score": format_score(self.win, self.loser_score)
+                })
+                database.publish()
 
                 self.gameplay_random_seed = self.opp_name = self.opp_rank = self.my_rank = self.player_number = self.win = self.loser_score = None
                 self.state = State.NO_MATCH
-                database.publish()
 
     def on_shutdown(self):
         self.gameplay_random_seed = self.opp_name = self.opp_rank = self.my_rank = self.player_number = self.win = self.loser_score = None
         self.state = State.GAME_CLOSED
 
+    def hello_there(self):
+        self.gui.set_values({"score": "hello there"})
 
 # app.mainloop()
-if __name__ == '__main__':
-    StateMachine()
+# if __name__ == '__main__':
+#     StateMachine()

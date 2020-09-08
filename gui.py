@@ -1,20 +1,4 @@
-# import tkinter
-# import threading
-#
-# class MyTkApp(threading.Thread):
-#     def __init__(self):
-#         self.root=tkinter.Tk()
-#         self.s = tkinter.StringVar()
-#         self.s.set('Foo')
-#         l = tkinter.Label(self.root,textvariable=self.s)
-#         l.pack()
-#         threading.Thread.__init__(self)
-#
-#     def run(self):
-#         self.root.mainloop()
-
 import tkinter as tk
-
 from fs_stats import StateMachine
 
 
@@ -22,47 +6,60 @@ class Application(tk.Frame):
     def __init__(self):
         self.master = tk.Tk()
         super().__init__(self.master)
-        self.create_widgets()
         self.backend = StateMachine(self)
+        self.grid_columnconfigure(0, pad=5, minsize=70)
+        self.create_widgets()
         self.backend.start()
-        self.grid_columnconfigure(2, pad=2)
-        self.grid_rowconfigure(2, pad=2)
         self.pack()
 
     def create_widgets(self):
+        class RowCounter:
+            def __init__(self):
+                self.count = 0
+
+            def __call__(self, *args, **kwargs):
+                self.count += 1
+                return self.count
+
+        def make_row(label, val, row):
+            self.__setattr__(f"{val}_label", tk.Label(self, justify="center"))
+            self.__getattribute__(f"{val}_label")["text"] = label
+            self.__getattribute__(f"{val}_label").grid(row=row, column=0)
+
+            self.__setattr__(f"{val}_value", tk.Entry(self, justify="center"))
+            self.__getattribute__(f"{val}_value").insert(1, '-')
+            self.__getattribute__(f"{val}_value")["state"] = "disabled"
+            self.__getattribute__(f"{val}_value").grid(row=row, column=1)
+
+        next_row = RowCounter()
+
         self.status_title = tk.Label(self)
         self.status_title["text"] = "Status:"
         self.status_title.grid(row=0)
-        # self.status_title.pack()
 
         self.status_message = tk.Entry(self, width=20, justify="center")
         self.status_message.insert(0, 'Pending')
         self.status_message.grid(row=0, column=1)
-        # self.hi_there.pack()
 
-        self.opponent_title = tk.Label(self, justify="center")
-        self.opponent_title["text"] = "Opponent"
-        self.opponent_title.grid(row=2, column=0)
-        # self.opponent_title.pack()
+        self.status_title = tk.Label(self, font=("Helvetica", 14), text="My Stats", justify="center")
+        self.status_title.grid(row=next_row(), padx=0, pady=5, column=0, columnspan=3)
 
-        self.opponent_name = tk.Entry(self, width=20, justify="center")
-        self.opponent_name.insert(1, 'Pending')
-        self.opponent_name["state"] = "disabled"
-        self.opponent_name.grid(row=2, column=1)
+        make_row("Rank", "my_rank", next_row())
 
-        self.opponent_rank = tk.Entry(self, width=10, justify="center")
-        self.opponent_rank.insert(1, -1)
-        self.opponent_rank["state"] = "disabled"
-        self.opponent_rank.grid(row=2, column=2)
+        self.status_title = tk.Label(self, font=("Helvetica", 14), text="Last Match", justify="center")
+        self.status_title.grid(row=next_row(), padx=0, pady=5, column=0, columnspan=3)
 
-        # self.message = tk.Label(self)
-        # self.message["text"] = 'Initial message'
-        # self.message.grid(row=1)
-        # self.message.pack()
+        for datapoint in ["name", "rank"]:
+            make_row(datapoint.capitalize(), f"opp_{datapoint}", next_row())
 
+        make_row("Score", "score", next_row())
+
+        self.quit = tk.Button(self, text="HELLO", fg="green",
+                              command=self.backend.hello_there)
+        self.quit.grid(row=10, column=1)
         self.quit = tk.Button(self, text="QUIT", fg="red",
                               command=self.master.destroy)
-        self.quit.grid(row=3, column=2)
+        self.quit.grid(row=10, column=2)
 
     def update_status(self, text):
         self.status_message["state"] = "normal"
@@ -70,11 +67,13 @@ class Application(tk.Frame):
         self.status_message.insert(0, text)
         self.status_message["state"] = "disabled"
 
-    def update_opponent_name(self, text):
-        self.opponent_name["state"] = "normal"
-        self.opponent_name.delete(0, "end")
-        self.opponent_name.insert(0, text)
-        self.opponent_name["state"] = "disabled"
+    def set_values(self, obj: dict):
+        for key, value in obj.items():
+            field = self.__getattribute__(f"{key}_value")
+            field["state"] = "normal"
+            field.delete(0, "end")
+            field.insert(0, value)
+            field["state"] = "disabled"
 
 
 app = Application()
